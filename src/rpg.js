@@ -221,11 +221,13 @@
   function pickup(p, l) {
     if (l.kind === 'gold') {
       p.gold += l.amount;
+      G.sfx('gold');
       G.Texts.add(p.x, p.y - 70, '+' + l.amount + ' lượng', '#f3d995', 12, 0.8);
       return true;
     }
     if (l.kind === 'potion') {
       p.potions[l.pot]++;
+      G.sfx('potion');
       G.Texts.add(p.x, p.y - 70, l.pot === 'hp' ? '+1 bình máu' : '+1 bình nội lực', l.pot === 'hp' ? '#ff9a8a' : '#8fc0ff', 12);
       return true;
     }
@@ -234,6 +236,7 @@
       return false;
     }
     p.bag.push(l.item);
+    G.sfx('item', { rarity: l.item.rarity });
     const R = G.RARITY[l.item.rarity];
     G.Texts.add(p.x, p.y - 74, l.item.name, R.color, 13, 1.3);
     if (l.item.rarity >= 2) G.toast('Nhặt được ' + R.name + ': ' + l.item.name, 'gold');
@@ -498,6 +501,7 @@
       S.quest.i++;
       S.quest.count = 0;
       G.banner('Hoàn thành: ' + q.title, rewardText(q.reward));
+      G.sfx('quest');
       giveReward(p, q.reward);
       const nq = G.currentQuest();
       if (nq) G.toast('Nhiệm vụ mới: ' + nq.title + '. Nhấp vào khung nhiệm vụ để đọc chi tiết.', 'gold');
@@ -508,6 +512,7 @@
       const r = { exp: Math.round(G.expNeed(p.lv) * (b.elite ? 0.8 : 0.5)), gold: 25 * p.lv * (b.elite ? 3 : 1), item: b.elite ? 2 : Math.random() < 0.5 ? 1 : null };
       S.quest.bounty = null;
       G.banner('Hoàn thành truy nã', rewardText(r));
+      G.sfx('quest');
       giveReward(p, r);
     }
     checking = false;
@@ -626,6 +631,7 @@
       if (p.gold < cost) { G.toast('Không đủ lượng', 'warn'); return; }
       p.gold -= cost;
       p.potions[kind] += 5;
+      G.sfx('gold');
       G.saveGame();
       shopDialog(npc);
     };
@@ -661,6 +667,7 @@
     p.bag = p.bag.filter((x) => x.id !== it.id);
     p.equip[it.slot] = it;
     if (old) p.bag.push(old);
+    G.sfx('equip');
     G.refreshStats(p);
     sel = { from: 'equip', slot: it.slot };
     G.questCheck();
@@ -681,6 +688,7 @@
     const p = S.player;
     p.bag = p.bag.filter((x) => x.id !== it.id);
     p.gold += G.itemValue(it);
+    G.sfx('gold');
     G.toast('Đã bán ' + it.name + ' · +' + G.itemValue(it) + ' lượng');
     sel = null;
     G.renderBag();

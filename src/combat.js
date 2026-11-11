@@ -152,6 +152,7 @@
     G.Texts.add(tgt.x, tgt.y - h - 4, crit ? dmg + '!' : String(dmg), color, size);
 
     if (!opts.dot) {
+      G.sfx(tgt.kind === 'player' ? 'hurt' : 'hit', { x: tgt.x, y: tgt.y, el, crit });
       G.hitBurst(tgt.x, tgt.y - h * 0.5, el, crit);
       if (Math.random() < (opts.effectChance != null ? opts.effectChance : 0.2)) G.applyStatus(tgt, el, src);
       if (crit && src.kind === 'player') G.shake(3);
@@ -252,6 +253,7 @@
     if (t.kind === 'monster') {
       t.deathT = 0.6;
       t.respawnT = t.boss ? 60 : t.elite ? 45 : 10;
+      G.sfx('death', { x: t.x, y: t.y, big: t.elite || t.boss });
       G.burst(t.x, t.y - h * 0.5, E[t.el].color, t.elite || t.boss ? 50 : 20, t.elite ? 360 : 220, { hot: true });
       G.ring(t.x, t.y, 6, 40 * t.size, E[t.el].light, 0.4, 5);
       if (S.target === t) S.target = null;
@@ -264,6 +266,7 @@
       }
     } else {
       t.deathT = 3;
+      G.sfx('defeat');
       G.burst(t.x, t.y - 30, '#c8442d', 30, 240, {});
       G.onPlayerDeath && G.onPlayerDeath();
     }
@@ -293,6 +296,7 @@
       G.ring(p.x, p.y, 10, 120, '#fff6cf', 0.7, 8);
       G.burst(p.x, p.y - 30, '#f0d27a', 40, 200, { hot: true, up: 140 });
       G.banner('Thăng cấp ' + p.lv, 'Sinh lực, nội lực và công lực đều tăng');
+      G.sfx('levelup');
       p.sect.skills.forEach((sk) => {
         if (sk.unlock === p.lv) G.toast('Lĩnh ngộ chiêu mới: ' + sk.name, 'gold');
       });
@@ -319,6 +323,7 @@
   };
   G.spawnGround = function (o) {
     o.t = 0; o.ticked = false; o.nextTick = o.delay || 0; o.delay = o.delay || 0; o.dur = o.dur || 0; o.tickInt = o.tickInt || 0.5;
+    if (o.team === 1 && o.delay > 0.3) G.sfx('warn', { x: o.x, y: o.y });
     S.grounds.push(o);
     return o;
   };
@@ -397,11 +402,13 @@
             g.ticked = true;
             G.hitArea(g.owner, g.x, g.y, g.r, g.dmg, g.el, { effectChance: g.effectChance });
             G.impactFx(g);
+            G.sfx('boom', { x: g.x, y: g.y, el: g.el, size: g.r / 120 });
           }
           done = true;
         } else {
           while (g.t >= g.nextTick && g.nextTick <= g.delay + g.dur + 1e-6) {
             G.hitArea(g.owner, g.x, g.y, g.r, g.dmg, g.el, { effectChance: g.effectChance });
+            G.sfx(g.vfx === 'spin' || g.vfx === 'leafstorm' ? 'swing' : 'tick', { x: g.x, y: g.y, el: g.el, vfx: g.vfx, soft: true });
             g.nextTick += g.tickInt;
           }
           G.lingerFx(g, dt);
@@ -443,6 +450,7 @@
       G.Texts.add(c.x, c.y - 70, '+' + hv, '#8dff9a', 16);
     }
     const ec = sk.effectChance;
+    if (sk.type !== 'slash') G.sfx('cast', { x: c.x, y: c.y, el: c.el, type: sk.type, ult: sk.ult });
     switch (sk.type) {
       case 'slash': {
         const hits = sk.hits || 1;
@@ -452,6 +460,7 @@
             const tx = tgt && alive(tgt) ? tgt.x : ax, ty = tgt && alive(tgt) ? tgt.y : ay;
             const ang = Math.atan2((ty - c.y) / 0.72, tx - c.x);
             if (h > 0) c.atkAnim = 0;
+            G.sfx('swing', { x: c.x, y: c.y, el: c.el });
             G.Fx.add({ type: 'arc', x: c.x, y: c.y - 18, ang, arc: sk.arc, r: sk.range, color: el.color, light: el.light, dur: 0.26 });
             for (const t of opponents(c.team).slice()) {
               const dx = t.x - c.x, dy = (t.y - c.y) / 0.72, d = Math.hypot(dx, dy) - t.r;
@@ -667,6 +676,7 @@
     if (kind === 'mp' && p.mp >= p.maxMp) return;
     p.potions[kind]--;
     p.potCd = 1.2;
+    G.sfx('potion');
     if (kind === 'hp') {
       const v = Math.round(p.maxHp * 0.45);
       p.hp = Math.min(p.maxHp, p.hp + v);
@@ -701,6 +711,7 @@
     if (!alive(p)) return;
     const el = E[m.el];
     m.atkAnim = 0;
+    G.sfx(m.ranged ? 'cast' : 'swing', { x: m.x, y: m.y, el: m.el, type: 'projectile', soft: true, vol: 0.6 });
     if (m.ranged) {
       const h = G.bodyHeight(m);
       const shots = m.boss ? 3 : 1;
@@ -758,6 +769,7 @@
         m.el = G.SINH[m.el];
         const el = E[m.el];
         G.ring(m.x, m.y, 20, 180, el.light, 0.7, 10);
+        G.sfx('elchange', { x: m.x, y: m.y });
         G.burst(m.x, m.y - 60, el.color, 40, 300, { hot: true });
         if (dP < 700) G.toast(m.name + ' chuyển sang hành ' + el.name + ' — hãy dùng hành khắc ' + el.name + '!', 'warn');
       }

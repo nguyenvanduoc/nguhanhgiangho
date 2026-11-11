@@ -81,9 +81,17 @@ Tiến trình (cấp, trang bị, túi đồ, lượng, nhiệm vụ) được t
 | Z | Tự động đánh (tự chọn quái, dùng chiêu, uống thuốc, nhặt đồ) |
 | N | Bảng ngũ hành |
 | H | Hướng dẫn trong game |
+| M | Tắt/bật âm thanh (nút loa cạnh bản đồ nhỏ để chỉnh âm lượng) |
 | F | Ẩn/hiện FPS |
 
 Trên điện thoại: kéo nửa trái màn hình để di chuyển, chạm các nút chiêu bên phải, chạm NPC để nói chuyện.
+
+## Âm thanh
+
+Toàn bộ âm thanh được tạo bằng code (Web Audio API), không dùng file mp3.
+
+- **Nhạc nền ngũ cung** mô phỏng đàn tranh. 5 âm Cung, Thương, Giốc, Chủy, Vũ ứng với Thổ, Kim, Mộc, Hỏa, Thủy, nên mỗi vùng chơi điệu thức bắt đầu từ âm của hành vùng đó. Khi giao chiến có thêm trống trận và mõ, gần Yêu Vương thì nhịp nhanh hơn.
+- **Tiếng hiệu ứng theo hành**: Kim ngân như kim loại, Mộc xào xạc, Thủy trong như băng, Hỏa phừng phực, Thổ ầm ì. Âm thanh có vị trí trái/phải và nhỏ dần theo khoảng cách.
 
 ## Cấu trúc code
 
@@ -96,5 +104,6 @@ Trên điện thoại: kéo nửa trái màn hình để di chuyển, chạm cá
 | `src/actors.js` | Vẽ nhân vật, quái, icon kỹ năng |
 | `src/vfx.js` | Hiệu ứng chiêu thức và hạt môi trường |
 | `src/combat.js` | Sát thương, trạng thái, kỹ năng, đạn, AI quái |
+| `src/audio.js` | Âm thanh: nhạc nền ngũ cung, tiếng hiệu ứng theo hành |
 | `src/rpg.js` | Trang bị, rơi đồ, túi đồ, NPC, hội thoại, nhiệm vụ, truy nã |
 | `src/game.js` | Vòng lặp, camera, điều khiển, HUD, lưu game |

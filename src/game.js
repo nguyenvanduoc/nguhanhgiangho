@@ -191,6 +191,7 @@
   function handleKeys() {
     const I = G.Input;
     if (I.take('KeyH')) togglePanel('guide');
+    if (I.take('KeyM')) { G.Audio.setMuted(!G.Audio.settings.muted); syncSound(); G.toast(G.Audio.settings.muted ? 'Đã tắt tiếng (M để bật lại)' : 'Đã bật tiếng'); }
     if (I.take('Escape')) { if (anyPanel()) G.openPanel(null); else S.target = null; }
     if (S.mode !== 'play') return;
     if (I.take('KeyN')) togglePanel('wheel');
@@ -288,6 +289,12 @@
       G.Fx.update(dt);
     }
     S.cam.shake = Math.max(0, S.cam.shake - dt * 40);
+    if (G.Audio.ready) {
+      if (S.mode === 'play' && p) {
+        const boss = S.monsters.find((m) => m.boss);
+        G.Audio.update(G.biomeAt(p.x, p.y), p.combatT > 0 && !p.dead, !!(boss && !boss.dead && Math.hypot(boss.x - p.x, boss.y - p.y) < 800));
+      } else G.Audio.update('menu', false, false);
+    }
     if (S.flash) { S.flash.a -= dt * 1.4; if (S.flash.a <= 0) S.flash = null; }
   }
 
@@ -754,6 +761,34 @@
     requestAnimationFrame(frame);
   }
 
+  /* ---------- Âm thanh: bảng chỉnh âm lượng ---------- */
+  function syncSound() {
+    const s = G.Audio.settings;
+    $('sndMusic').value = Math.round(s.music * 100);
+    $('sndSfx').value = Math.round(s.sfx * 100);
+    $('sndMute').checked = s.muted;
+    $('btnSound').classList.toggle('off', s.muted);
+    $('btnSound').setAttribute('aria-label', s.muted ? 'Âm thanh đang tắt' : 'Âm thanh');
+    $('btnSoundMenu').textContent = s.muted ? 'Âm thanh: Tắt' : 'Âm thanh: Bật';
+  }
+  function bindSound() {
+    const A = G.Audio;
+    const wake = () => A.init();
+    window.addEventListener('pointerdown', wake, true);
+    window.addEventListener('keydown', wake, true);
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest && e.target.closest('button');
+      if (b && !b.classList.contains('slot') && !b.classList.contains('pot')) G.sfx('click');
+    });
+    $('btnSound').addEventListener('click', () => { $('soundPop').hidden = !$('soundPop').hidden; });
+    $('btnSoundMenu').addEventListener('click', () => { A.setMuted(!A.settings.muted); syncSound(); });
+    $('sndMusic').addEventListener('input', (e) => { A.settings.music = e.target.value / 100; A.apply(); A.save(); });
+    $('sndSfx').addEventListener('input', (e) => { A.settings.sfx = e.target.value / 100; A.apply(); A.save(); });
+    $('sndSfx').addEventListener('change', () => G.sfx('hit', { el: 'kim' }));
+    $('sndMute').addEventListener('change', (e) => { A.setMuted(e.target.checked); syncSound(); });
+    syncSound();
+  }
+
   function boot(data) {
     canvas = $('game');
     ctx = canvas.getContext('2d', { alpha: false });
@@ -762,6 +797,7 @@
     resize();
     window.addEventListener('resize', resize);
     bindInput();
+    bindSound();
     buildMenu();
     buildWheel();
     $('btnStart').addEventListener('click', () => startGame(null));

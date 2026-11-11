@@ -176,6 +176,17 @@
   .muted { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
   .btn-primary.sm { flex: none; padding: 9px 14px; font-size: 14px; }
   .btn-primary:disabled, .hbtn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+  .hbtn.snd { display: grid; place-items: center; padding: 0 8px; color: var(--gold-2); }
+  .hbtn.snd svg { width: 18px; height: 18px; }
+  .hbtn.snd .x { display: none; }
+  .hbtn.snd.off { color: var(--muted); }
+  .hbtn.snd.off .x { display: inline; }
+  .hbtn.snd.off .w { display: none; }
+  #soundPop { width: 230px; padding: 12px; display: grid; gap: 10px; }
+  #soundPop label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+  #soundPop label.chk { display: flex; align-items: center; gap: 8px; color: var(--paper); }
+  #soundPop input[type="range"] { width: 100%; accent-color: var(--gold); }
+  #soundPop input[type="checkbox"] { accent-color: var(--cinnabar); width: 16px; height: 16px; }
   .goldrow { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--gold-2); font-variant-numeric: tabular-nums; }
   .goldrow i { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff2b0, #c9952c); box-shadow: 0 0 0 1px #6b4a12; }
   #quest { width: 230px; padding: 9px 11px; display: grid; gap: 3px; text-align: left; cursor: pointer; border-color: rgba(214,176,100,0.45); }
@@ -326,7 +337,10 @@
           <button type="button" class="btn-primary" id="btnStart">Vào giang hồ</button>
           <button type="button" class="btn-ghost" id="btnContinue" hidden>Tiếp tục hành trình<span></span></button>
         </div>
-        <button type="button" class="hbtn" id="btnGuideMenu">Đọc cách chơi trước khi vào game</button>
+        <div class="actions">
+          <button type="button" class="hbtn" id="btnGuideMenu">Đọc cách chơi</button>
+          <button type="button" class="hbtn" id="btnSoundMenu">Âm thanh: Bật</button>
+        </div>
         <p class="hint"><kbd>WASD</kbd> di chuyển · nhấp chuột chọn quái hoặc đi tới · <kbd>Space</kbd> đánh thường · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> chiêu thức · <kbd>Q</kbd>/<kbd>E</kbd> bình máu, nội lực · <kbd>Tab</kbd> đổi mục tiêu · <kbd>Z</kbd> tự động đánh · <kbd>N</kbd> bảng ngũ hành</p>
       </aside>
     </div>
@@ -357,7 +371,13 @@
       <button type="button" class="hbtn" id="btnBag" title="Túi đồ (I)">Túi đồ</button>
       <button type="button" class="hbtn" id="btnAuto" aria-pressed="false" title="Tự động đánh (Z)">Tự động</button>
       <button type="button" class="hbtn" id="btnGuide" title="Hướng dẫn (H)" aria-label="Hướng dẫn">?</button>
+      <button type="button" class="hbtn snd" id="btnSound" title="Âm thanh (M để tắt/bật)" aria-label="Âm thanh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="w" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="x" d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
       <button type="button" class="hbtn" id="btnMenu" title="Lưu và về màn hình chọn phái">Menu</button>
+    </div>
+    <div id="soundPop" class="plate" hidden>
+      <label for="sndMusic">Nhạc nền <input type="range" id="sndMusic" min="0" max="100" step="5"></label>
+      <label for="sndSfx">Hiệu ứng <input type="range" id="sndSfx" min="0" max="100" step="5"></label>
+      <label class="chk" for="sndMute"><input type="checkbox" id="sndMute"> Tắt tiếng (phím M)</label>
     </div>
     <button type="button" id="quest" class="plate" title="Nhấp để đọc chi tiết nhiệm vụ">
       <span class="q-head">Nhiệm vụ <b id="qTitle"></b></span>
@@ -513,6 +533,7 @@
             <tr><th scope="row">Tab</th><td>Đổi mục tiêu</td></tr>
             <tr><th scope="row">Z</th><td>Bật/tắt tự động đánh</td></tr>
             <tr><th scope="row">N / H</th><td>Bảng ngũ hành / hướng dẫn này</td></tr>
+            <tr><th scope="row">M</th><td>Tắt/bật âm thanh. Nút loa cạnh bản đồ nhỏ để chỉnh âm lượng nhạc và hiệu ứng</td></tr>
             <tr><th scope="row">Điện thoại</th><td>Kéo nửa trái màn hình để đi, chạm nút chiêu bên phải, chạm NPC để nói chuyện</td></tr>
           </tbody>
         </table>
@@ -526,6 +547,7 @@
 <script src="src/world.js"></script>
 <script src="src/actors.js"></script>
 <script src="src/vfx.js"></script>
+<script src="src/audio.js"></script>
 <script src="src/combat.js"></script>
 <script src="src/rpg.js"></script>
 <script src="src/game.js"></script>
