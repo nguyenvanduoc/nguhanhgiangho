@@ -1,0 +1,324 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ngũ Hành Giang Hồ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Noto+Serif:wght@600;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700&text=%E9%87%91%E6%9C%A8%E6%B0%B4%E7%81%AB%E5%9C%9F%E4%BA%94%E8%A1%8C&display=swap">
+<style>
+  /* Layout: canvas thế giới tràn màn hình; HUD là các tấm sơn mài mực-vàng nổi ở góc */
+  :root {
+    --ink: #0d1213;
+    --ink-2: #141b1c;
+    --ink-3: #1d2627;
+    --paper: #efe6d2;
+    --muted: #a39b86;
+    --gold: #d6b064;
+    --gold-2: #f3d995;
+    --cinnabar: #c8442d;
+    --mana: #3f7fd8;
+    --line: rgba(239, 230, 210, 0.14);
+    --el: #d6b064;
+    --f-display: "Noto Serif", "Noto Serif SC", Georgia, serif;
+    --f-body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-han: "Noto Serif SC", "Noto Serif", "Songti SC", serif;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; overflow: hidden; background: var(--ink); color: var(--paper); font-family: var(--f-body); }
+  body { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+  .chip { display: inline-grid; place-items: center; width: 1.6em; height: 1.6em; margin-right: 0.45em; border-radius: 50%; border: 1.5px solid var(--c); color: var(--c); font-family: var(--f-han); font-weight: 700; font-size: 0.85em; vertical-align: -0.2em; }
+
+  /* ================= MENU ================= */
+  #menu { position: fixed; inset: 0; overflow-y: auto; z-index: 20;
+    background: linear-gradient(100deg, rgba(13,18,19,0.94) 0%, rgba(13,18,19,0.86) 52%, rgba(13,18,19,0.55) 100%);
+    padding-block: max(20px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .menu-inner { max-width: 1180px; margin: 0 auto; display: grid; gap: 22px; }
+  .brand { display: flex; align-items: center; gap: 18px; }
+  .seal { flex: none; width: 64px; height: 64px; display: grid; place-items: center; background: var(--cinnabar); color: #fff4e0; border-radius: 6px;
+    font-family: var(--f-han); font-size: 26px; line-height: 1; writing-mode: vertical-rl; letter-spacing: 2px; box-shadow: inset 0 0 0 3px rgba(255,240,220,0.22); transform: rotate(-3deg); }
+  .brand h1 { margin: 0; font-family: var(--f-display); font-weight: 900; font-size: clamp(30px, 5vw, 52px); line-height: 1.05; letter-spacing: 0.01em; color: var(--gold-2); text-wrap: balance; }
+  .brand p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; line-height: 1.5; }
+  .menu-body { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+  .sect-list { display: grid; gap: 10px; }
+  .el-row { display: grid; grid-template-columns: 78px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 14px; row-gap: 6px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(20,27,28,0.7); }
+  .el-badge { grid-row: span 2; display: grid; place-items: center; align-content: center; gap: 2px; border-radius: 8px; background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--c) 30%, transparent), transparent 70%); }
+  .el-badge b { font-family: var(--f-han); font-size: 34px; color: var(--c); line-height: 1; }
+  .el-badge span { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .el-rel { font-size: 12px; color: var(--muted); letter-spacing: 0.02em; }
+  .el-sects { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sect-card { text-align: left; display: grid; gap: 3px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--ink-2); transition: border-color .15s, background .15s, transform .15s; }
+  .sect-card:hover { border-color: color-mix(in srgb, var(--c) 60%, transparent); transform: translateY(-1px); }
+  .sect-card.sel { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--ink-2)); box-shadow: 0 0 0 1px var(--c) inset; }
+  .sn { font-family: var(--f-display); font-weight: 700; font-size: 16px; color: var(--paper); }
+  .sr { font-size: 12px; color: var(--muted); }
+  .detail { position: sticky; top: 0; display: grid; gap: 12px; padding: 18px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--c) 10%, var(--ink-2)), var(--ink-2) 40%); }
+  #preview { width: 100%; height: 190px; display: block; }
+  .detail h2 { margin: 0; font-family: var(--f-display); font-weight: 900; font-size: 30px; color: var(--c); }
+  #dMeta { font-size: 13px; color: var(--muted); }
+  #dDesc { margin: 0; line-height: 1.55; }
+  #dStats { display: grid; gap: 5px; }
+  .stat { display: grid; grid-template-columns: 70px 1fr 40px; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
+  .stat i { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.07); position: relative; overflow: hidden; }
+  .stat i::after { content: ""; position: absolute; inset: 0; transform-origin: left; transform: scaleX(var(--f)); background: var(--c); }
+  .stat b { text-align: right; color: var(--paper); font-variant-numeric: tabular-nums; }
+  #dSkills { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  #dSkills li { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 10px; align-items: start; }
+  #dSkills canvas { width: 42px; height: 42px; border-radius: 8px; border: 1px solid var(--line); }
+  #dSkills b { font-family: var(--f-display); font-size: 15px; }
+  #dSkills small { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
+  #dSkills p { margin: 3px 0 0; font-size: 13px; line-height: 1.45; color: #d9d0bc; }
+  #dEffect { margin: 0; font-size: 13px; line-height: 1.5; padding: 10px 12px; border-radius: 8px; background: rgba(0,0,0,0.25); color: #d9d0bc; }
+  .namefield { display: grid; gap: 6px; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+  .namefield input { font: inherit; font-size: 15px; color: var(--paper); background: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn-primary { flex: 1 1 200px; padding: 13px 18px; border: 0; border-radius: 8px; background: var(--cinnabar); color: #fff4e0; font-family: var(--f-display); font-weight: 900; font-size: 18px; letter-spacing: 0.03em; box-shadow: inset 0 0 0 2px rgba(255,240,220,0.18); }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-ghost { flex: 1 1 200px; display: grid; gap: 2px; text-align: left; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--gold); background: transparent; color: var(--gold-2); font-weight: 700; }
+  .btn-ghost span { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .hint { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  kbd { font-family: var(--f-body); font-size: 11px; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--line); background: var(--ink-3); color: var(--paper); }
+
+  /* ================= HUD ================= */
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  #hud > * { pointer-events: auto; }
+  .plate { background: rgba(13,18,19,0.78); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+  .me { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); display: flex; gap: 10px; padding: 8px 12px 8px 8px; width: min(330px, calc(100vw - 210px)); }
+  .portrait { position: relative; flex: none; width: 56px; height: 56px; }
+  #portrait { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--el); display: block; }
+  #hLv { position: absolute; right: -4px; bottom: -4px; min-width: 22px; height: 22px; padding: 0 4px; border-radius: 11px; background: var(--ink); border: 1.5px solid var(--gold); color: var(--gold-2); font-size: 11px; font-weight: 800; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  .bars { flex: 1; min-width: 0; display: grid; gap: 4px; align-content: center; }
+  #hName { font-size: 12px; font-weight: 700; color: var(--gold-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar { position: relative; height: 12px; border-radius: 3px; background: rgba(255,255,255,0.07); overflow: hidden; }
+  .bar i { position: absolute; inset: 0; transform-origin: left; display: block; }
+  .bar.hp i { background: linear-gradient(180deg, #e2604a, #a8301e); }
+  .bar.mp i { background: linear-gradient(180deg, #5b98ee, #2b5fb0); }
+  .bar.exp { height: 5px; }
+  .bar.exp i { background: linear-gradient(90deg, #a77d2c, var(--gold-2)); }
+  .bar span { position: relative; display: block; font-size: 9.5px; line-height: 12px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px #000; }
+  .exprow { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  #target { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; padding: 8px 14px 8px 8px; width: min(380px, calc(100vw - 24px)); }
+  #tEl { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--c); color: var(--c); font-family: var(--f-han); font-size: 18px; }
+  #target > div { flex: 1; min-width: 0; display: grid; gap: 4px; }
+  #tName { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #target .bar { height: 7px; }
+  .trel { font-size: 11px; color: var(--muted); }
+  .trel.good { color: #9ee88a; }
+  .trel.bad { color: #ff9a7a; }
+  .side { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); display: grid; gap: 6px; justify-items: end; }
+  #minimap { width: 156px; height: 156px; border-radius: 10px; border: 1px solid var(--line); display: block; background: var(--ink); }
+  #hZone { font-size: 11px; font-weight: 700; color: var(--gold-2); text-align: right; text-shadow: 0 1px 3px #000; }
+  .hud-btns { display: flex; gap: 6px; }
+  .hbtn { height: 34px; min-width: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(13,18,19,0.82); font-size: 12px; font-weight: 700; }
+  .hbtn.han { font-family: var(--f-han); font-size: 16px; color: var(--gold-2); }
+  #btnAuto.on { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff4e0; }
+  #fps { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px #000; }
+  #skillbar { position: absolute; left: 50%; bottom: max(14px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; gap: 8px; padding: 8px; align-items: flex-end; }
+  .slot { position: relative; width: 58px; height: 58px; padding: 0; border-radius: 10px; border: 1px solid var(--line); background: var(--ink); overflow: hidden; touch-action: none; }
+  .slot canvas { width: 100%; height: 100%; display: block; }
+  .slot.ult { border-color: var(--gold); }
+  .slot .cd { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 800; font-size: 18px; text-shadow: 0 1px 3px #000;
+    background: conic-gradient(rgba(5,7,8,0.72) calc(var(--p, 0) * 1turn), transparent 0); }
+  .slot .key { position: absolute; left: 4px; top: 3px; font-size: 9.5px; font-weight: 700; color: var(--paper); text-shadow: 0 1px 2px #000; }
+  .slot .mpc { position: absolute; right: 3px; bottom: 2px; font-size: 9.5px; font-weight: 700; color: #9cc4ff; text-shadow: 0 1px 2px #000; }
+  .slot .lock { position: absolute; inset: auto 0 0 0; font-size: 10px; font-weight: 700; text-align: center; padding: 2px 0; background: rgba(0,0,0,0.7); }
+  .slot .lock:empty { display: none; }
+  .slot.locked canvas { filter: grayscale(1) brightness(0.45); }
+  .slot.locked .mpc { display: none; }
+  .slot.nomp canvas { filter: saturate(0.3) brightness(0.6); }
+  .slot:active { transform: scale(0.96); }
+  .pot { position: relative; width: 44px; height: 44px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: var(--ink); display: grid; place-items: center; touch-action: none; }
+  .pot svg { width: 22px; height: 22px; }
+  .pot b { position: absolute; right: -3px; bottom: -3px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--ink-3); border: 1px solid var(--line); font-size: 10px; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  .pot .k { position: absolute; left: 50%; top: -14px; transform: translateX(-50%); font-size: 9.5px; font-weight: 700; color: var(--muted); }
+  #joyzone, #joyBase { display: none; }
+  #toasts { position: absolute; top: calc(max(12px, env(safe-area-inset-top, 0px)) + 84px); left: 50%; transform: translateX(-50%); display: grid; gap: 6px; justify-items: center; pointer-events: none; width: min(560px, calc(100vw - 32px)); }
+  .toast { padding: 7px 14px; border-radius: 999px; background: rgba(13,18,19,0.85); border: 1px solid var(--line); font-size: 13px; text-align: center; animation: tin .25s ease-out; transition: opacity .4s, transform .4s; }
+  .toast.gold { border-color: var(--gold); color: var(--gold-2); }
+  .toast.warn { border-color: var(--cinnabar); color: #ffc2b0; }
+  .toast.out { opacity: 0; transform: translateY(-6px); }
+  @keyframes tin { from { opacity: 0; transform: translateY(8px); } }
+  #banner { position: absolute; left: 50%; top: 34%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; opacity: 0; width: min(640px, calc(100vw - 32px)); }
+  #banner b { display: block; font-family: var(--f-display); font-weight: 900; font-size: clamp(30px, 6vw, 54px); color: var(--gold-2); text-shadow: 0 2px 0 #3a2a10, 0 0 24px rgba(240,200,110,0.45); }
+  #banner span { display: block; margin-top: 6px; font-size: 14px; color: var(--paper); text-shadow: 0 1px 3px #000; }
+  #banner.show { animation: ban 3s ease-out forwards; }
+  @keyframes ban { 0% { opacity: 0; transform: translate(-50%, -40%) scale(1.08); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 75% { opacity: 1; } 100% { opacity: 0; } }
+  #death { position: fixed; inset: 0; z-index: 15; display: grid; place-items: center; background: radial-gradient(circle, rgba(60,8,4,0.25), rgba(10,4,2,0.7)); }
+  #death > div { text-align: center; display: grid; gap: 10px; justify-items: center; padding: 16px; }
+  #death h2 { margin: 0; font-family: var(--f-display); font-size: 44px; font-weight: 900; color: #ff9a7a; }
+  #death p { margin: 0; color: var(--paper); }
+
+  /* bảng ngũ hành */
+  #wheel { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(5,8,9,0.72); overflow-y: auto;
+    padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .wheel-panel { width: min(880px, 100%); display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 20px; padding: 20px; background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; position: relative; }
+  .wheel-panel h2 { margin: 0 0 4px; font-family: var(--f-display); font-weight: 900; font-size: 26px; color: var(--gold-2); }
+  .wheel-panel p { margin: 0 0 10px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+  #wheelSvg svg { width: 100%; height: auto; display: block; }
+  .wh { font-family: var(--f-han); font-size: 22px; font-weight: 700; }
+  .wn { font-family: var(--f-body); font-size: 10px; fill: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .legend i { display: inline-block; width: 22px; height: 0; border-top: 2px solid var(--gold); vertical-align: middle; margin-right: 6px; }
+  .legend i.k { border-top: 2px dashed #d8513a; }
+  .tbl { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  tbody th { white-space: nowrap; font-weight: 700; }
+  td b { color: var(--gold-2); }
+  #wheelClose { position: absolute; top: 10px; right: 10px; }
+
+  @media (max-width: 860px) {
+    .menu-body { grid-template-columns: minmax(0, 1fr); }
+    .detail { position: static; scroll-margin-top: 12px; }
+    #preview { height: 150px; }
+    .wheel-panel { grid-template-columns: minmax(0, 1fr); }
+    #wheelSvg { max-width: 300px; margin: 0 auto; }
+  }
+  @media (max-width: 460px) {
+    .el-row { grid-template-columns: 54px minmax(0, 1fr); padding: 10px; column-gap: 10px; }
+    .el-badge b { font-size: 26px; }
+    .el-sects { grid-template-columns: minmax(0, 1fr); }
+    .seal { width: 52px; height: 52px; font-size: 21px; }
+  }
+
+  /* bố cục cảm ứng: cần điều khiển trái, cụm chiêu phải */
+  body.touch #joyzone { display: block; position: absolute; left: 0; bottom: 0; width: 46vw; height: 58vh; touch-action: none; }
+  body.touch #joyBase { display: block; position: absolute; left: 0; top: 0; width: 112px; height: 112px; border-radius: 50%; border: 2px solid rgba(239,230,210,0.25); background: rgba(13,18,19,0.35); opacity: 0; pointer-events: none; transition: opacity .15s; }
+  body.touch #joyBase.on { opacity: 1; }
+  #joyKnob { position: absolute; left: 34px; top: 34px; width: 44px; height: 44px; border-radius: 50%; background: rgba(239,230,210,0.5); }
+  body.touch #skillbar { left: auto; transform: none; right: max(10px, env(safe-area-inset-right, 0px)); bottom: max(10px, env(safe-area-inset-bottom, 0px)); width: 210px; height: 200px; padding: 0; background: none; border: 0; box-shadow: none; display: block; }
+  body.touch .slot { position: absolute; width: 60px; height: 60px; border-radius: 50%; }
+  body.touch .slot.s0 { right: 6px; bottom: 6px; width: 84px; height: 84px; }
+  body.touch .slot.s1 { right: 100px; bottom: 0; }
+  body.touch .slot.s2 { right: 92px; bottom: 76px; }
+  body.touch .slot.s3 { right: 20px; bottom: 104px; }
+  body.touch .slot .key { display: none; }
+  body.touch .slot .lock { inset: auto 0 40% 0; background: rgba(0,0,0,0.6); }
+  body.touch #toasts { top: calc(max(12px, env(safe-area-inset-top, 0px)) + 150px); }
+  body.touch .pot { position: absolute; }
+  body.touch #potHpBtn { right: 168px; bottom: 74px; }
+  body.touch #potMpBtn { right: 160px; bottom: 140px; }
+  body.touch .pot .k { display: none; }
+  body.touch .me { width: min(300px, calc(100vw - 150px)); }
+  body.touch #minimap { width: 112px; height: 112px; }
+  body.touch #target { top: auto; bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 214px); left: auto; right: max(10px, env(safe-area-inset-right, 0px)); transform: none; width: min(300px, calc(100vw - 20px)); }
+  @media (prefers-reduced-motion: reduce) { #banner.show { animation-duration: 0.01s; } .toast { animation: none; } }
+</style>
+
+<canvas id="game" aria-label="Thế giới game"></canvas>
+
+<div id="menu">
+  <div class="menu-inner">
+    <header class="brand">
+      <div class="seal" aria-hidden="true">五行</div>
+      <div>
+        <h1>Ngũ Hành Giang Hồ</h1>
+        <p>Chọn một môn phái, nắm vững tương sinh tương khắc rồi bước vào giang hồ. Năm vùng đất quanh Ngũ Hành Trấn xếp theo đúng vòng tương sinh: Thủy ở Bắc, đi theo chiều kim đồng hồ là Mộc, Hỏa, Thổ, Kim.</p>
+      </div>
+    </header>
+    <div class="menu-body">
+      <section class="sect-list" id="sectList" aria-label="Môn phái"></section>
+      <aside class="detail" id="detail">
+        <canvas id="preview" width="560" height="380" aria-hidden="true"></canvas>
+        <h2 id="dName"></h2>
+        <div id="dMeta"></div>
+        <p id="dDesc"></p>
+        <div id="dStats"></div>
+        <ol id="dSkills"></ol>
+        <p id="dEffect"></p>
+        <label class="namefield" for="heroName">Tên nhân vật
+          <input id="heroName" maxlength="16" value="Thiếu hiệp" autocomplete="off">
+        </label>
+        <div class="actions">
+          <button type="button" class="btn-primary" id="btnStart">Vào giang hồ</button>
+          <button type="button" class="btn-ghost" id="btnContinue" hidden>Tiếp tục hành trình<span></span></button>
+        </div>
+        <p class="hint"><kbd>WASD</kbd> di chuyển · nhấp chuột chọn quái hoặc đi tới · <kbd>Space</kbd> đánh thường · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> chiêu thức · <kbd>Q</kbd>/<kbd>E</kbd> bình máu, nội lực · <kbd>Tab</kbd> đổi mục tiêu · <kbd>Z</kbd> tự động đánh · <kbd>N</kbd> bảng ngũ hành</p>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<div id="hud" hidden>
+  <div class="me plate">
+    <div class="portrait"><canvas id="portrait" width="128" height="128"></canvas><span id="hLv">1</span></div>
+    <div class="bars">
+      <div id="hName"></div>
+      <div class="bar hp"><i id="hHp"></i><span id="hHpT"></span></div>
+      <div class="bar mp"><i id="hMp"></i><span id="hMpT"></span></div>
+      <div class="bar exp"><i id="hExp"></i></div>
+      <div class="exprow"><span>Kinh nghiệm</span><span id="hExpT"></span></div>
+    </div>
+  </div>
+  <div id="target" class="plate" hidden>
+    <span id="tEl"></span>
+    <div><div id="tName"></div><div class="bar hp"><i id="tHp"></i></div><div id="tRel" class="trel"></div></div>
+  </div>
+  <div class="side">
+    <canvas id="minimap" width="312" height="312" aria-label="Bản đồ nhỏ"></canvas>
+    <div id="hZone"></div>
+    <div class="hud-btns">
+      <button type="button" class="hbtn han" id="btnWheel" title="Bảng ngũ hành (N)" aria-label="Bảng ngũ hành">五</button>
+      <button type="button" class="hbtn" id="btnAuto" aria-pressed="false" title="Tự động đánh (Z)">Tự động</button>
+      <button type="button" class="hbtn" id="btnMenu" title="Lưu và về màn hình chọn phái">Menu</button>
+    </div>
+    <div id="fps"></div>
+  </div>
+  <div id="joyzone"><div id="joyBase"><div id="joyKnob"></div></div></div>
+  <div id="skillbar" class="plate">
+    <button type="button" class="pot" id="potHpBtn" aria-label="Dùng bình máu" title="Bình máu (Q)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6v3l3 4v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9l3-4z" fill="#c8442d" stroke="#efe6d2" stroke-width="1.2"/></svg>
+      <span class="k">Q</span><b id="potHp">0</b>
+    </button>
+    <button type="button" class="pot" id="potMpBtn" aria-label="Dùng bình nội lực" title="Bình nội lực (E)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6v3l3 4v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9l3-4z" fill="#3f7fd8" stroke="#efe6d2" stroke-width="1.2"/></svg>
+      <span class="k">E</span><b id="potMp">0</b>
+    </button>
+  </div>
+  <div id="toasts" aria-live="polite"></div>
+  <div id="banner"><b></b><span></span></div>
+</div>
+
+<div id="death" hidden>
+  <div>
+    <h2>Trọng thương</h2>
+    <p>Bạn sẽ hồi phục tại Ngũ Hành Trấn và mất một ít kinh nghiệm.</p>
+    <button type="button" class="btn-primary" id="btnRespawn">Hồi thành ngay</button>
+  </div>
+</div>
+
+<div id="wheel" hidden>
+  <div class="wheel-panel" role="dialog" aria-label="Ngũ hành">
+    <button type="button" class="hbtn" id="wheelClose">Đóng</button>
+    <div>
+      <h2>Ngũ Hành</h2>
+      <p>Mũi tên vàng là tương sinh, mũi tên đỏ là tương khắc.</p>
+      <div id="wheelSvg"></div>
+      <div class="legend"><span><i></i>Tương sinh</span><span><i class="k"></i>Tương khắc</span></div>
+    </div>
+    <div>
+      <p>Đánh vào hành mình khắc gây thêm <b>30%</b> sát thương. Đánh vào hành khắc mình bị giảm <b>25%</b>. Mỗi đòn còn có thể gây hiệu ứng riêng của hành. Thủ lĩnh Ngũ Hành Yêu Vương ở góc Đông Nam đổi hành mỗi 7 giây theo vòng tương sinh.</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th scope="col">Hành</th><th scope="col">Khắc</th><th scope="col">Bị khắc bởi</th><th scope="col">Sinh</th><th scope="col">Hiệu ứng</th></tr></thead>
+          <tbody id="wheelRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="src/engine.js"></script>
+<script src="src/data.js"></script>
+<script src="src/world.js"></script>
+<script src="src/actors.js"></script>
+<script src="src/vfx.js"></script>
+<script src="src/combat.js"></script>
+<script src="src/game.js"></script>
