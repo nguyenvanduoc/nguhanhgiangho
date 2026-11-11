@@ -172,8 +172,91 @@
   thead th { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
   tbody th { white-space: nowrap; font-weight: 700; }
   td b { color: var(--gold-2); }
-  #wheelClose { position: absolute; top: 10px; right: 10px; }
+  .pclose { position: absolute; top: 10px; right: 10px; z-index: 2; }
+  .muted { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
+  .btn-primary.sm { flex: none; padding: 9px 14px; font-size: 14px; }
+  .btn-primary:disabled, .hbtn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+  .goldrow { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--gold-2); font-variant-numeric: tabular-nums; }
+  .goldrow i { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff2b0, #c9952c); box-shadow: 0 0 0 1px #6b4a12; }
+  #quest { width: 230px; padding: 9px 11px; display: grid; gap: 3px; text-align: left; cursor: pointer; border-color: rgba(214,176,100,0.45); }
+  #quest:hover { border-color: var(--gold); }
+  .q-head { display: flex; gap: 6px; align-items: baseline; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+  #qTitle { font-family: var(--f-display); font-size: 14px; letter-spacing: 0; text-transform: none; color: var(--gold-2); }
+  #qGoal { font-size: 12px; font-weight: 600; }
+  #qWhere { font-size: 11px; color: var(--muted); }
+  #qWhere:empty { display: none; }
 
+  /* hội thoại NPC */
+  #dialog { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: max(16px, env(safe-area-inset-bottom, 0px)); width: min(680px, calc(100vw - 24px)); }
+  .dlg { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px; padding: 14px; background: rgba(20,27,28,0.97); border: 1px solid var(--gold); border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+  #dlgPortrait { width: 96px; height: 96px; border-radius: 10px; border: 1px solid var(--line); }
+  .dlg-name { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+  #dlgName { font-family: var(--f-display); font-weight: 900; font-size: 18px; color: var(--gold-2); }
+  #dlgRole { font-size: 11px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  #dlgText { margin: 6px 0 10px; font-size: 14px; line-height: 1.6; white-space: pre-line; max-height: 40vh; overflow-y: auto; }
+  #dlgBtns { display: flex; flex-wrap: wrap; gap: 8px; }
+  #dlgBtns .hbtn { height: auto; padding: 9px 12px; }
+
+  /* túi đồ */
+  .overlay { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(5,8,9,0.72); overflow-y: auto;
+    padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .bag-panel { position: relative; width: min(1000px, 100%); display: grid; gap: 14px; padding: 18px; background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; }
+  .bag-head { display: flex; flex-wrap: wrap; gap: 14px; align-items: baseline; padding-right: 70px; }
+  .bag-head h2 { margin: 0; font-family: var(--f-display); font-weight: 900; font-size: 26px; color: var(--gold-2); }
+  .bag-head span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  #bagGold { color: var(--gold-2); font-weight: 700; }
+  .bag-body { display: grid; grid-template-columns: 260px minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
+  #ring { position: relative; width: 240px; height: 240px; margin: 0 auto; }
+  #ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .eq { position: absolute; width: 60px; height: 60px; padding: 0; border-radius: 12px; border: 1px solid var(--line); background: var(--ink); display: grid; place-items: center; overflow: visible; }
+  .eq canvas { width: 100%; height: 100%; border-radius: 11px; display: block; }
+  .eq span { font-size: 10px; color: var(--muted); padding: 2px; text-align: center; }
+  .eq.lit { box-shadow: 0 0 0 2px #f3c94a, 0 0 18px rgba(243,201,74,0.5); }
+  .eq.sel, .cell.sel { outline: 2px solid var(--paper); outline-offset: 2px; }
+  .elc { position: absolute; right: -6px; top: -6px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-family: var(--f-han); font-size: 11px; color: var(--c); background: var(--ink); border: 1.5px solid var(--c); }
+  .ring-c { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: grid; justify-items: center; text-align: center; gap: 1px; pointer-events: none; }
+  .ring-c b { font-family: var(--f-display); font-size: 24px; color: var(--gold-2); }
+  .ring-c span { font-size: 10px; color: var(--muted); }
+  .ring-c em { font-style: normal; font-size: 10px; font-weight: 800; color: #f3c94a; }
+  #ringInfo { margin-top: 8px; text-align: center; }
+  #bagGrid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  .cell { position: relative; aspect-ratio: 1; max-width: 100%; padding: 0; border-radius: 8px; border: 1px solid var(--line); background: var(--ink); }
+  .cell:disabled { cursor: default; opacity: 0.5; }
+  .cell canvas { width: 100%; height: 100%; border-radius: 7px; display: block; }
+  .cell i { position: absolute; right: 2px; bottom: 1px; font-style: normal; font-size: 10px; font-weight: 800; text-shadow: 0 1px 2px #000; }
+  .cell.high canvas { filter: grayscale(0.7) brightness(0.6); }
+  #itemCard { display: grid; gap: 8px; padding: 14px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,0.25); min-height: 160px; align-content: start; }
+  .ic-head canvas { width: 56px; height: 56px; border-radius: 8px; display: block; }
+  .ic-name { font-family: var(--f-display); font-size: 18px; }
+  .ic-meta { font-size: 12px; color: var(--muted); }
+  .ic-lines { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 13px; }
+  .ic-lines li.x { color: #9fd0ff; }
+  .ic-hidden { margin: 0; padding: 8px 10px; border-radius: 8px; border: 1px dashed rgba(239,230,210,0.2); font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .ic-hidden.on { border: 1px solid #f3c94a; color: #f3d995; background: rgba(243,201,74,0.08); }
+  .ic-hidden small { font-size: 11px; }
+  .ic-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ic-btns .hbtn { height: auto; padding: 9px 12px; }
+
+  /* hướng dẫn */
+  .guide-panel { position: relative; width: min(860px, 100%); padding: 22px; background: var(--ink-2); border: 1px solid var(--line); border-radius: 12px; display: grid; gap: 18px; }
+  .guide-panel h2 { margin: 0; padding-right: 70px; font-family: var(--f-display); font-weight: 900; font-size: 28px; color: var(--gold-2); text-wrap: balance; }
+  .guide-panel h3 { margin: 0 0 6px; font-family: var(--f-display); font-size: 18px; color: var(--gold-2); }
+  .guide-panel p, .guide-panel li { font-size: 14px; line-height: 1.6; color: #ddd4c0; max-width: 72ch; }
+  .guide-panel p { margin: 0 0 6px; }
+  .guide-panel ol, .guide-panel ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+  .guide-panel b { color: var(--paper); }
+  .guide-lead { font-size: 15px !important; color: var(--paper) !important; }
+
+  @media (max-width: 980px) {
+    .bag-body { grid-template-columns: 260px minmax(0, 1fr); }
+    #itemCard { grid-column: 1 / -1; }
+  }
+  @media (max-width: 640px) {
+    .bag-body { grid-template-columns: minmax(0, 1fr); }
+    .dlg { grid-template-columns: 64px minmax(0, 1fr); }
+    #dlgPortrait { width: 64px; height: 64px; }
+  }
   @media (max-width: 860px) {
     .menu-body { grid-template-columns: minmax(0, 1fr); }
     .detail { position: static; scroll-margin-top: 12px; }
@@ -206,8 +289,11 @@
   body.touch #potHpBtn { right: 168px; bottom: 74px; }
   body.touch #potMpBtn { right: 160px; bottom: 140px; }
   body.touch .pot .k { display: none; }
-  body.touch .me { width: min(300px, calc(100vw - 150px)); }
+  body.touch .me { width: min(300px, calc(100vw - 162px)); }
   body.touch #minimap { width: 112px; height: 112px; }
+  body.touch #quest { width: 190px; padding: 7px 9px; }
+  body.touch #qTitle { font-size: 12px; }
+  body.touch .hud-btns { flex-wrap: wrap; justify-content: flex-end; max-width: 200px; }
   body.touch #target { top: auto; bottom: calc(max(10px, env(safe-area-inset-bottom, 0px)) + 214px); left: auto; right: max(10px, env(safe-area-inset-right, 0px)); transform: none; width: min(300px, calc(100vw - 20px)); }
   @media (prefers-reduced-motion: reduce) { #banner.show { animation-duration: 0.01s; } .toast { animation: none; } }
 </style>
@@ -240,6 +326,7 @@
           <button type="button" class="btn-primary" id="btnStart">Vào giang hồ</button>
           <button type="button" class="btn-ghost" id="btnContinue" hidden>Tiếp tục hành trình<span></span></button>
         </div>
+        <button type="button" class="hbtn" id="btnGuideMenu">Đọc cách chơi trước khi vào game</button>
         <p class="hint"><kbd>WASD</kbd> di chuyển · nhấp chuột chọn quái hoặc đi tới · <kbd>Space</kbd> đánh thường · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> chiêu thức · <kbd>Q</kbd>/<kbd>E</kbd> bình máu, nội lực · <kbd>Tab</kbd> đổi mục tiêu · <kbd>Z</kbd> tự động đánh · <kbd>N</kbd> bảng ngũ hành</p>
       </aside>
     </div>
@@ -255,6 +342,7 @@
       <div class="bar mp"><i id="hMp"></i><span id="hMpT"></span></div>
       <div class="bar exp"><i id="hExp"></i></div>
       <div class="exprow"><span>Kinh nghiệm</span><span id="hExpT"></span></div>
+      <div class="goldrow"><i aria-hidden="true"></i><span id="hGold">0 lượng</span></div>
     </div>
   </div>
   <div id="target" class="plate" hidden>
@@ -266,9 +354,16 @@
     <div id="hZone"></div>
     <div class="hud-btns">
       <button type="button" class="hbtn han" id="btnWheel" title="Bảng ngũ hành (N)" aria-label="Bảng ngũ hành">五</button>
+      <button type="button" class="hbtn" id="btnBag" title="Túi đồ (I)">Túi đồ</button>
       <button type="button" class="hbtn" id="btnAuto" aria-pressed="false" title="Tự động đánh (Z)">Tự động</button>
+      <button type="button" class="hbtn" id="btnGuide" title="Hướng dẫn (H)" aria-label="Hướng dẫn">?</button>
       <button type="button" class="hbtn" id="btnMenu" title="Lưu và về màn hình chọn phái">Menu</button>
     </div>
+    <button type="button" id="quest" class="plate" title="Nhấp để đọc chi tiết nhiệm vụ">
+      <span class="q-head">Nhiệm vụ <b id="qTitle"></b></span>
+      <span id="qGoal"></span>
+      <span id="qWhere"></span>
+    </button>
     <div id="fps"></div>
   </div>
   <div id="joyzone"><div id="joyBase"><div id="joyKnob"></div></div></div>
@@ -296,7 +391,7 @@
 
 <div id="wheel" hidden>
   <div class="wheel-panel" role="dialog" aria-label="Ngũ hành">
-    <button type="button" class="hbtn" id="wheelClose">Đóng</button>
+    <button type="button" class="hbtn pclose" data-close>Đóng</button>
     <div>
       <h2>Ngũ Hành</h2>
       <p>Mũi tên vàng là tương sinh, mũi tên đỏ là tương khắc.</p>
@@ -315,10 +410,122 @@
   </div>
 </div>
 
+<div id="dialog" hidden>
+  <div class="dlg" role="dialog" aria-labelledby="dlgName">
+    <canvas id="dlgPortrait" width="192" height="192" aria-hidden="true"></canvas>
+    <div>
+      <div class="dlg-name"><span id="dlgName"></span><span id="dlgRole"></span></div>
+      <p id="dlgText"></p>
+      <div id="dlgBtns"></div>
+    </div>
+  </div>
+</div>
+
+<div id="bag" class="overlay" hidden>
+  <div class="bag-panel" role="dialog" aria-label="Túi đồ">
+    <button type="button" class="hbtn pclose" data-close>Đóng</button>
+    <div class="bag-head"><h2>Túi đồ</h2><span id="bagGold"></span><span>Ô trống <b id="bagCount"></b></span></div>
+    <div class="bag-body">
+      <section aria-label="Trang bị đang mặc">
+        <div id="ring"></div>
+        <p class="muted" id="ringInfo"></p>
+      </section>
+      <section aria-label="Hành trang"><div id="bagGrid"></div></section>
+      <section id="itemCard" aria-live="polite"></section>
+    </div>
+  </div>
+</div>
+
+<div id="guide" class="overlay" hidden>
+  <article class="guide-panel" role="dialog" aria-label="Hướng dẫn cách chơi">
+    <button type="button" class="hbtn pclose" data-close>Đóng</button>
+    <h2>Cách chơi Ngũ Hành Giang Hồ</h2>
+    <section>
+      <h3>Mục tiêu</h3>
+      <p class="guide-lead">Ngũ Hành Yêu Vương đã làm đảo loạn tế đàn giữa Ngũ Hành Trấn, yêu thú năm vùng tràn ra khắp nơi. Bạn làm theo nhiệm vụ của Trấn Trưởng Mạc Lão, mạnh lên qua từng vùng, gom trang bị kích hoạt ngũ hành, rồi tiến vào góc Đông Nam tru diệt Yêu Vương.</p>
+    </section>
+    <section>
+      <h3>Một vòng chơi</h3>
+      <ol>
+        <li><b>Nhận nhiệm vụ.</b> Khung nhiệm vụ nằm dưới bản đồ nhỏ. Mũi tên vàng cạnh nhân vật và hình thoi vàng trên bản đồ nhỏ chỉ chỗ cần đến. Nhấp vào khung để đọc lại lời dặn.</li>
+        <li><b>Ra vùng đánh quái.</b> Quái ở rìa vùng gần trấn yếu nhất, càng đi sâu cấp càng cao. Quái chết rơi lượng, bình thuốc và trang bị, chỉ cần đi ngang qua là nhặt.</li>
+        <li><b>Lên cấp, mở chiêu.</b> Chiêu thứ ba mở ở cấp 3, tuyệt kỹ mở ở cấp 6.</li>
+        <li><b>Mặc đồ và kích hoạt ngũ hành.</b> Mở túi đồ, thay món mạnh hơn, xếp hành sao cho các món sinh ra nhau.</li>
+        <li><b>Về trấn tiếp tế.</b> Quái không vào trấn. Bà Tư ở tiệm tạp hóa bán bình thuốc và mua lại đồ không cần.</li>
+        <li><b>Hạ thủ lĩnh, rồi hạ Yêu Vương.</b> Xong chuỗi nhiệm vụ chính, Trấn Trưởng giao lệnh truy nã lặp lại để tiếp tục kiếm đồ.</li>
+      </ol>
+    </section>
+    <section>
+      <h3>Ngũ hành khi đánh nhau</h3>
+      <ul>
+        <li>Đánh vào hành mình <b>khắc</b>: thêm 30% sát thương. Đánh vào hành <b>khắc mình</b>: chỉ còn 75%. Khung mục tiêu ở giữa trên màn hình cho biết ngay bạn đang lợi hay thiệt.</li>
+        <li>Mỗi đòn có thể gây hiệu ứng của hành: Kim chảy máu và giảm thủ, Mộc trúng độc cộng dồn, Thủy làm chậm, Hỏa thiêu đốt, Thổ gây choáng.</li>
+        <li>Ngũ Hành Yêu Vương đổi hành mỗi 7 giây theo vòng tương sinh. Dồn tuyệt kỹ khi nó mang hành bạn khắc, lùi lại khi nó mang hành khắc bạn.</li>
+        <li>Nhấn <b>N</b> để xem vòng tương sinh tương khắc bất cứ lúc nào.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Trang bị và kích hoạt ẩn</h3>
+      <ul>
+        <li>Có 4 phẩm chất: <b style="color:#d9d4c7">Thường</b>, <b style="color:#5cb8ff">Tinh xảo</b>, <b style="color:#c58cff">Hiếm</b>, <b style="color:#f3c94a">Hoàng Kim</b>. Phẩm càng cao càng nhiều dòng chỉ số. Đồ tốt có cột sáng màu khi nằm dưới đất.</li>
+        <li>Năm ô trang bị xếp thành vòng: <b>Vũ khí → Y phục → Đầu → Hạng liên → Ngọc bội → Vũ khí</b>.</li>
+        <li>Từ Tinh xảo trở lên, mỗi món có một <b>thuộc tính ẩn</b>. Thuộc tính ẩn chỉ sáng khi món đứng trước nó trong vòng có hành sinh ra hành của nó. Ví dụ Vũ khí hành Mộc làm sáng Y phục hành Hỏa, vì Mộc sinh Hỏa.</li>
+        <li>Sáng đủ 5 món là <b>Ngũ Hành Viên Mãn</b>: thêm 10% công, 5% bạo kích, 5% tốc độ chạy.</li>
+        <li>Dòng "Kháng hành X" giảm sát thương từ hành X. Dòng "Sát thương lên hành X" tăng sát thương lên quái hành X.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Bản đồ</h3>
+      <div class="tbl">
+        <table>
+          <thead><tr><th scope="col">Vùng</th><th scope="col">Hướng</th><th scope="col">Yêu thú</th><th scope="col">Thủ lĩnh (cấp 12)</th></tr></thead>
+          <tbody>
+            <tr><th scope="row"><span class="chip" style="--c:#5cb8ff">水</span>Hàn Băng Nguyên</th><td>Bắc</td><td>Tuyết Lang, Băng Linh</td><td>Hàn Băng Yêu Hồ</td></tr>
+            <tr><th scope="row"><span class="chip" style="--c:#6fd06a">木</span>Thanh Lâm Cốc</th><td>Đông</td><td>Thụ Yêu, Độc Hoa Tinh</td><td>Cổ Mộc Thụ Vương</td></tr>
+            <tr><th scope="row"><span class="chip" style="--c:#ff7a3d">火</span>Xích Diễm Địa</th><td>Đông Nam</td><td>Hỏa Hồ, Diễm Linh</td><td>Xích Viêm Ma Lang</td></tr>
+            <tr><th scope="row"><span class="chip" style="--c:#d6a35a">土</span>Hoàng Thổ Lĩnh</th><td>Tây Nam</td><td>Nham Thạch Quái, Sa Lang</td><td>Sơn Thần Cự Thạch</td></tr>
+            <tr><th scope="row"><span class="chip" style="--c:#f0d27a">金</span>Thu Kim Sơn</th><td>Tây</td><td>Thiết Vệ Tàn Binh, Kim Linh</td><td>Kiếm Ma</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted">Ngũ Hành Yêu Vương (cấp 20) ở góc Đông Nam bản đồ. Quái cấp 1 ở rìa vùng gần trấn, lên dần tới khoảng cấp 18 ở rìa xa.</p>
+    </section>
+    <section>
+      <h3>Mẹo sống sót</h3>
+      <ul>
+        <li>Thấy vòng đỏ dưới chân là thủ lĩnh sắp tung chiêu: chạy ra khỏi vòng ngay.</li>
+        <li>Quái cùng loại đứng gần nhau sẽ kéo cả đàn khi bạn đánh một con. Kéo từng nhóm nhỏ.</li>
+        <li>Ngừng đánh vài giây là bắt đầu hồi máu và nội lực nhanh. Đứng trong trấn là an toàn tuyệt đối.</li>
+        <li>Bật <b>Tự động</b> (Z) để nhân vật tự chọn quái, tự dùng chiêu mạnh nhất đã hồi, tự uống thuốc khi máu dưới 35% và tự nhặt đồ.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Điều khiển</h3>
+      <div class="tbl">
+        <table>
+          <tbody>
+            <tr><th scope="row">WASD, mũi tên</th><td>Di chuyển. Nhấp chuột xuống đất để đi tới, nhấp vào quái để đánh</td></tr>
+            <tr><th scope="row">Space hoặc J</th><td>Đánh thường (giữ để đánh liên tục)</td></tr>
+            <tr><th scope="row">1 2 3</th><td>Chiêu thức. Nếu mục tiêu ở xa, nhân vật tự chạy tới rồi ra chiêu</td></tr>
+            <tr><th scope="row">Q / E</th><td>Bình máu / bình nội lực</td></tr>
+            <tr><th scope="row">R</th><td>Nói chuyện với NPC ở gần</td></tr>
+            <tr><th scope="row">I</th><td>Túi đồ</td></tr>
+            <tr><th scope="row">Tab</th><td>Đổi mục tiêu</td></tr>
+            <tr><th scope="row">Z</th><td>Bật/tắt tự động đánh</td></tr>
+            <tr><th scope="row">N / H</th><td>Bảng ngũ hành / hướng dẫn này</td></tr>
+            <tr><th scope="row">Điện thoại</th><td>Kéo nửa trái màn hình để đi, chạm nút chiêu bên phải, chạm NPC để nói chuyện</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </article>
+</div>
+
 <script src="src/engine.js"></script>
 <script src="src/data.js"></script>
 <script src="src/world.js"></script>
 <script src="src/actors.js"></script>
 <script src="src/vfx.js"></script>
 <script src="src/combat.js"></script>
+<script src="src/rpg.js"></script>
 <script src="src/game.js"></script>

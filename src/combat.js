@@ -20,12 +20,15 @@
     const l = e.lv - 1;
     if (e.kind === 'player') {
       const b = e.sect.base;
-      e.maxHp = Math.round(b.hp * (1 + 0.15 * l));
-      e.maxMp = Math.round(b.mp * (1 + 0.1 * l));
-      e.baseAtk = b.atk * (1 + 0.13 * l);
-      e.baseDef = b.def * (1 + 0.12 * l);
-      e.baseSpd = b.spd;
-      e.crit = 0.1 + l * 0.004;
+      const g = e.gear || { atk: 0, def: 0, hp: 0, mp: 0, atkPct: 0, crit: 0, spd: 0, res: {}, dmg: {} };
+      e.maxHp = Math.round(b.hp * (1 + 0.15 * l) + g.hp);
+      e.maxMp = Math.round(b.mp * (1 + 0.1 * l) + g.mp);
+      e.baseAtk = (b.atk * (1 + 0.13 * l) + g.atk) * (1 + g.atkPct / 100);
+      e.baseDef = b.def * (1 + 0.12 * l) + g.def;
+      e.baseSpd = b.spd * (1 + g.spd / 100);
+      e.crit = 0.1 + l * 0.004 + g.crit / 100;
+      e.res = g.res;
+      e.dmgEl = g.dmg;
     } else {
       const D = e.D, mult = D.boss ? 14 : D.elite ? 6 : 1;
       e.maxHp = Math.round((50 + e.lv * 26) * mult);
@@ -55,7 +58,11 @@
       cds: [0, 0, 0, 0], buffs: [], status: {}, atkAnim: -1, atkDur: 0.28, flash: 0, invuln: 0, stunImmune: 0,
       dash: null, pending: null, moveTo: null, dead: false, deathT: 0, combatT: 0, dotT: 0, potCd: 0, dustT: 0,
       potions: (save && save.potions) || { hp: 6, mp: 6 },
+      gold: (save && save.gold) || 0,
+      equip: (save && save.equip) || {},
+      bag: (save && save.bag) || [],
     };
+    p.gear = G.gearStats ? G.gearStats(p) : null;
     G.recalc(p);
     p.hp = p.maxHp;
     p.mp = p.maxMp;
@@ -94,9 +101,9 @@
       }
       let ex = W.cx + Math.cos(z.a) * (G.ZONE_DIST + z.r * 0.6), ey = W.cy + Math.sin(z.a) * (G.ZONE_DIST + z.r * 0.6);
       for (let k = 0; k < 30 && G.blocked(ex, ey, 40); k++) { ex += G.rr(-40, 40); ey += G.rr(-40, 40); }
-      S.monsters.push(G.createMonster(sp.elite, ex, ey, 16));
+      S.monsters.push(G.createMonster(sp.elite, ex, ey, 12));
     }
-    S.monsters.push(G.createMonster('yeuVuong', W.w - 440, W.h - 440, 22));
+    S.monsters.push(G.createMonster('yeuVuong', W.w - 440, W.h - 440, 20));
   };
 
   /* ---------- Phe đối địch ---------- */
@@ -124,6 +131,8 @@
     let dmg = G.stat(src, 'atk') * mult * G.rr(0.9, 1.1);
     const em = G.elemMult(el, tgt.el);
     dmg *= em;
+    if (src.dmgEl && src.dmgEl[tgt.el]) dmg *= 1 + src.dmgEl[tgt.el] / 100;
+    if (tgt.res && tgt.res[el]) dmg *= 1 - Math.min(60, tgt.res[el]) / 100;
     const crit = !opts.dot && Math.random() < (src.crit || 0.05);
     if (crit) dmg *= 1.75;
     dmg *= 100 / (100 + G.stat(tgt, 'def'));
@@ -249,13 +258,7 @@
       const p = S.player;
       if (p && (src === p || (src && src.team === 0))) {
         G.gainExp(p, t.exp);
-        const n = t.boss ? 5 : t.elite ? 3 : Math.random() < 0.22 ? 1 : 0;
-        if (n) {
-          const kind = t.elite || t.boss ? 'both' : Math.random() < 0.55 ? 'hp' : 'mp';
-          if (kind !== 'mp') p.potions.hp += n;
-          if (kind !== 'hp') p.potions.mp += n;
-          G.Texts.add(t.x, t.y - h - 26, kind === 'both' ? '+' + n + ' bình máu & nội lực' : kind === 'hp' ? '+1 bình máu' : '+1 bình nội lực', kind === 'mp' ? '#8fc0ff' : '#ff9a8a', 13, 1.4);
-        }
+        if (G.onMonsterKilled) G.onMonsterKilled(t);
         if (t.boss) G.toast('Đã hạ ' + t.name + '!', 'gold');
         else if (t.elite) G.toast('Đã hạ thủ lĩnh ' + t.name, 'gold');
       }
@@ -295,6 +298,7 @@
       });
       G.saveGame && G.saveGame();
     }
+    if (G.questCheck) G.questCheck();
   };
 
   function aggro(m) {

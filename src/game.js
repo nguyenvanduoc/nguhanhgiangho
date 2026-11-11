@@ -15,6 +15,7 @@
   S.paused = false;
   S.target = null;
   S.player = null;
+  S.npcs = [];
 
   let canvas, ctx, vw = 0, vh = 0, dpr = 1, resScale = 1, zoom = 1, vignette = null;
   const view = { x: 0, y: 0, w: 0, h: 0 };
@@ -25,7 +26,7 @@
   /* ---------- Lưu / tải ---------- */
   function getSave() {
     const p = S.player;
-    return p ? { sect: p.sect.id, name: p.name, lv: p.lv, exp: p.exp, potions: p.potions } : null;
+    return p ? { sect: p.sect.id, name: p.name, lv: p.lv, exp: p.exp, potions: p.potions, gold: p.gold, equip: p.equip, bag: p.bag, quest: S.quest } : null;
   }
   function loadSave() {
     try {
@@ -87,7 +88,19 @@
     void b.offsetWidth;
     b.classList.add('show');
   };
+  const PANELS = ['wheel', 'bag', 'guide', 'dialog'];
+  G.openPanel = function (name) {
+    for (const id of PANELS) $(id).hidden = id !== name;
+    S.paused = !!name && S.mode === 'play';
+    if (name === 'bag') G.renderBag();
+  };
+  const anyPanel = () => PANELS.some((id) => !$(id).hidden);
+  function togglePanel(name) {
+    if (name === 'bag' && !S.player) return;
+    G.openPanel($(name).hidden ? name : null);
+  }
   G.onPlayerDeath = function () {
+    G.openPanel(null);
     $('death').hidden = false;
     S.auto = false;
     syncAuto();
@@ -115,6 +128,13 @@
     canvas.addEventListener('pointerdown', (e) => {
       if (S.mode !== 'play' || !S.player || S.player.dead) return;
       const w = toWorld(e.clientX, e.clientY);
+      const npc = G.pickNPC(w.x, w.y);
+      if (npc) {
+        S.player.pending = null;
+        if (Math.hypot(npc.x - S.player.x, npc.y - S.player.y) < 90) G.talk(npc);
+        else { S.player.moveTo = { x: npc.x, y: npc.y + 30 }; S.player.talkTo = npc; }
+        return;
+      }
       const m = pickMonster(w.x, w.y);
       if (m) {
         S.target = m;
@@ -170,9 +190,13 @@
 
   function handleKeys() {
     const I = G.Input;
-    if (I.take('KeyN')) toggleWheel();
-    if (I.take('Escape')) { if (!$('wheel').hidden) toggleWheel(false); else S.target = null; }
-    if (S.paused || S.mode !== 'play') return;
+    if (I.take('KeyH')) togglePanel('guide');
+    if (I.take('Escape')) { if (anyPanel()) G.openPanel(null); else S.target = null; }
+    if (S.mode !== 'play') return;
+    if (I.take('KeyN')) togglePanel('wheel');
+    if (I.take('KeyI') || I.take('KeyB')) togglePanel('bag');
+    if (S.paused) return;
+    if (I.take('KeyR')) { const n = G.npcNear(S.player, 100); if (n) G.talk(n); }
     if (I.take('Digit1') || I.take('KeyK')) G.trySkill(1);
     if (I.take('Digit2') || I.take('KeyL')) G.trySkill(2);
     if (I.take('Digit3') || I.take('KeyU')) G.trySkill(3);
@@ -199,6 +223,8 @@
     if (p.hp < p.maxHp * 0.35 && p.potions.hp > 0) G.usePotion('hp');
     if (p.mp < p.maxMp * 0.15 && p.potions.mp > 0) G.usePotion('mp');
     if (p.pending) return;
+    const loot = G.nearestLoot(p, 220);
+    if (loot && !(G.alive(S.target) && S.target.ai === 'chase')) { p.moveTo = { x: loot.x, y: loot.y }; return; }
     if (!G.alive(S.target) || Math.hypot(S.target.x - p.x, S.target.y - p.y) > 650) S.target = G.nearestEnemy(p, 600);
     if (!S.target) return;
     for (const slot of [3, 2, 1, 0]) {
@@ -222,6 +248,7 @@
     G.updateTimers(dt);
     handleKeys();
     const p = S.player;
+    if (S.mode === 'play' && p && S.paused && G.bagDirty && !$('bag').hidden) G.renderBag();
     if (S.mode === 'play' && p && !S.paused) {
       const mv = readMove();
       if (mouseHold && !p.dead) {
@@ -239,6 +266,12 @@
       G.separate(activeBuf);
       G.updateProjectiles(dt);
       G.updateGrounds(dt);
+      G.updateLoot(dt);
+      G.updateNPCs();
+      if (p.talkTo) {
+        if (p.moveTo === null || p.pending) p.talkTo = null;
+        else if (Math.hypot(p.talkTo.x - p.x, p.talkTo.y - p.y) < 90) { const n = p.talkTo; p.talkTo = null; p.moveTo = null; G.talk(n); }
+      }
       if (S.target && S.target.dead) S.target = null;
       S.saveT = (S.saveT || 0) + dt;
       if (S.saveT > 15) { S.saveT = 0; G.saveGame(); }
@@ -277,6 +310,7 @@
     G.drawGroundChunks(ctx, view);
     G.Fx.draw(ctx, 'ground');
     for (const g of S.grounds) G.drawGround(ctx, g, 'ground');
+    G.drawLoot(ctx, view);
 
     // vòng chọn mục tiêu
     const tg = S.target;
@@ -310,6 +344,7 @@
       drawList.push(m);
     }
     if (S.player) drawList.push(S.player);
+    if (S.mode === 'play') for (const n of S.npcs) drawList.push(n);
     drawList.sort((a, b) => a.y - b.y);
     for (const o of drawList) {
       if (o.prop) {
@@ -325,7 +360,12 @@
     G.Particles.draw(ctx, view, false);
     G.Particles.draw(ctx, view, true);
     G.Fx.draw(ctx, 'top');
-    for (const o of drawList) if (!o.prop) G.drawOverhead(ctx, o, o === tg);
+    for (const o of drawList) {
+      if (o.prop) continue;
+      if (o.kind === 'npc') G.drawNpcOverhead(ctx, o);
+      else G.drawOverhead(ctx, o, o === tg);
+    }
+    drawQuestArrow();
     G.Texts.draw(ctx);
 
     // lớp phủ màn hình
@@ -350,8 +390,30 @@
     }
   }
 
+  // Mũi tên vàng quanh nhân vật chỉ tới mục tiêu nhiệm vụ
+  function drawQuestArrow() {
+    const p = S.player;
+    if (S.mode !== 'play' || !p || p.dead) return;
+    const t = G.questTarget();
+    if (!t) return;
+    const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy);
+    if (d < 380) return;
+    const a = Math.atan2(dy, dx), cx = p.x + Math.cos(a) * 58, cy = p.y - 22 + Math.sin(a) * 40;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(a);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.75 + Math.sin(S.time * 5) * 0.2;
+    ctx.fillStyle = '#f3c94a';
+    ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-6, -9); ctx.lineTo(-1, 0); ctx.lineTo(-6, 9); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
   /* ---------- HUD ---------- */
   const hud = {};
+  let hudQT = 0;
   function setText(el, v) { if (el._v !== v) { el._v = v; el.textContent = v; } }
   function setBar(el, f) {
     f = G.clamp(f, 0, 1);
@@ -360,7 +422,7 @@
   }
   function buildHud() {
     const p = S.player, el = E[p.el];
-    ['hName', 'hLv', 'hHp', 'hHpT', 'hMp', 'hMpT', 'hExp', 'hExpT', 'hZone', 'target', 'tEl', 'tName', 'tHp', 'tRel', 'potHp', 'potMp', 'fps'].forEach((id) => (hud[id] = $(id)));
+    ['hName', 'hLv', 'hHp', 'hHpT', 'hMp', 'hMpT', 'hExp', 'hExpT', 'hZone', 'hGold', 'target', 'tEl', 'tName', 'tHp', 'tRel', 'potHp', 'potMp', 'fps'].forEach((id) => (hud[id] = $(id)));
     document.documentElement.style.setProperty('--el', el.color);
     setText(hud.hName, p.name + ' · ' + p.sect.name);
     // chân dung
@@ -410,6 +472,9 @@
     setBar(hud.hExp, p.exp / need);
     setText(hud.hExpT, ((p.exp / need) * 100).toFixed(1) + '%');
     setText(hud.hZone, G.BIOME_NAME[G.biomeAt(p.x, p.y)]);
+    setText(hud.hGold, p.gold + ' lượng');
+    hudQT = (hudQT || 0) + 1;
+    if (hudQT % 10 === 0) G.updateQuestHud();
     setText(hud.potHp, String(p.potions.hp));
     setText(hud.potMp, String(p.potions.mp));
     for (let i = 0; i < 4; i++) {
@@ -485,6 +550,13 @@
         g.fillRect(m.x * sc - 1.2, m.y * sc - 1.2, 2.4, 2.4);
       }
     }
+    const qt = S.player && G.questTarget();
+    if (qt) {
+      g.fillStyle = '#f3c94a';
+      g.strokeStyle = '#1a1210';
+      g.lineWidth = 1;
+      g.beginPath(); g.moveTo(qt.x * sc, qt.y * sc - 6); g.lineTo(qt.x * sc + 5, qt.y * sc); g.lineTo(qt.x * sc, qt.y * sc + 6); g.lineTo(qt.x * sc - 5, qt.y * sc); g.closePath(); g.fill(); g.stroke();
+    }
     if (S.player) {
       const p = S.player;
       g.fillStyle = '#ffffff';
@@ -532,12 +604,6 @@
       rows += '<tr><th scope="row"><span class="chip" style="--c:' + e.color + '">' + e.han + '</span>' + e.name + '</th><td>' + E[G.KHAC[id]].name + '</td><td>' + E[G.khacBy(id)].name + '</td><td>' + E[G.SINH[id]].name + '</td><td><b>' + e.effectName + '</b> · ' + e.effectDesc + '</td></tr>';
     }
     $('wheelRows').innerHTML = rows;
-  }
-  function toggleWheel(force) {
-    const w = $('wheel');
-    const open = force != null ? force : w.hidden;
-    w.hidden = !open;
-    S.paused = open && S.mode === 'play';
   }
 
   /* ---------- Màn hình chọn môn phái ---------- */
@@ -638,6 +704,9 @@
     const sectId = save ? save.sect : selectedSect;
     const name = save ? save.name : ($('heroName').value.trim().slice(0, 16) || 'Thiếu hiệp');
     S.player = G.createPlayer(sectId, name, save);
+    G.initQuests(save);
+    S.npcs = G.createNPCs();
+    S.loot = [];
     S.target = null;
     S.projectiles.length = 0;
     S.grounds.length = 0;
@@ -650,14 +719,19 @@
     $('death').hidden = true;
     buildHud();
     G.saveGame();
-    G.banner(W.name, 'Ra khỏi trấn để gặp yêu thú. Đi theo đường đất tới vùng có hành bạn khắc.');
-    G.toast(touch ? 'Kéo bên trái để di chuyển, chạm nút chiêu bên phải' : 'WASD di chuyển · Space đánh thường · 1 2 3 dùng chiêu · Z tự động');
+    G.updateQuestHud();
+    if (!save) setTimeout(() => { if (S.mode === 'play') G.introDialog(); }, 500);
+    else {
+      G.banner(W.name, 'Chào mừng trở lại. Nhiệm vụ hiện tại hiển thị dưới bản đồ nhỏ.');
+      G.toast(touch ? 'Kéo bên trái để di chuyển, chạm nút chiêu bên phải' : 'WASD di chuyển · Space đánh thường · 1 2 3 chiêu · I túi đồ · H hướng dẫn');
+    }
   }
   function backToMenu() {
     G.saveGame();
     S.mode = 'menu';
     S.auto = false;
     syncAuto();
+    G.openPanel(null);
     S.paused = false;
     $('hud').hidden = true;
     $('death').hidden = true;
@@ -692,8 +766,12 @@
     buildWheel();
     $('btnStart').addEventListener('click', () => startGame(null));
     $('btnContinue').addEventListener('click', () => { const s = loadSave(); if (s) startGame(s); });
-    $('btnWheel').addEventListener('click', () => toggleWheel());
-    $('wheelClose').addEventListener('click', () => toggleWheel(false));
+    $('btnWheel').addEventListener('click', () => togglePanel('wheel'));
+    $('btnBag').addEventListener('click', () => togglePanel('bag'));
+    $('btnGuide').addEventListener('click', () => togglePanel('guide'));
+    $('btnGuideMenu').addEventListener('click', () => G.openPanel('guide'));
+    $('quest').addEventListener('click', () => { const c = S.npcs.find((n) => n.id === 'chief'); if (c) G.talk(c); });
+    document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => G.openPanel(null)));
     $('btnAuto').addEventListener('click', () => { S.auto = !S.auto; syncAuto(); });
     $('btnMenu').addEventListener('click', backToMenu);
     $('btnRespawn').addEventListener('click', () => { if (S.player && S.player.dead) G.respawnPlayer(S.player); });
